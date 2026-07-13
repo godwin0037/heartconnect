@@ -1,0 +1,45 @@
+[
+  {
+    "id": 1,
+    "userId": 2,
+    "username": "emma0037",
+    "status": "open",
+    "messages": [
+      {
+        "sender": "user",
+        "senderName": "emma0037",
+        "message": "there are no users on my page",
+        "timestamp": "2026-07-13T17:46:50.804Z"
+      },
+      {
+        "sender": "admin",
+        "senderName": "Admin",
+        "message": "Emma thank you for your patience, we are currently working to fix that, thank you.",
+        "timestamp": "2026-07-13T17:49:10.497Z"
+      },
+      {
+        "sender": "user",
+        "senderName": "emma0037",
+        "message": "ok thank you",
+        "timestamp": "2026-07-13T19:17:54.011Z"
+      }
+    ],
+    "createdAt": "2026-07-13T17:44:18.010Z"
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "username": "admin",
+    "status": "open",
+    "messages": [],
+    "createdAt": "2026-07-13T17:49:10.538Z"
+  },
+  {
+    "id": 3,
+    "userId": 3,
+    "username": "emma4545",
+    "status": "open",
+    "messages": [],
+    "createdAt": "2026-07-13T19:34:02.625Z"
+  }
+]

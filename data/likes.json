@@ -1,0 +1,20 @@
+[
+  {
+    "id": 3,
+    "profileId": 1,
+    "userId": 2,
+    "timestamp": "2026-07-13T17:50:50.995Z"
+  },
+  {
+    "id": 4,
+    "profileId": 2,
+    "userId": 2,
+    "timestamp": "2026-07-13T17:50:54.045Z"
+  },
+  {
+    "id": 5,
+    "profileId": 3,
+    "userId": 3,
+    "timestamp": "2026-07-13T20:01:36.695Z"
+  }
+]

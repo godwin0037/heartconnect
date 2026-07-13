@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password": "$2b$10$a5pBM.FN.TMVN/WKx08XIOccUQpGvK3ZWXpdCkI.HCW3VCjBnNy4e",
+    "role": "admin",
+    "approved": true,
+    "createdAt": "2026-07-13T16:25:19.958Z"
+  },
+  {
+    "id": 3,
+    "username": "emma4545",
+    "password": "$2b$10$rQr8QM1nG1fEaSm86cv0Cuh4u21MqnEBJeQheDZ9ooG80xEV5fplq",
+    "role": "user",
+    "approved": true,
+    "profileData": {
+      "name": "Emmanuel Davies",
+      "age": 22,
+      "gender": "Man",
+      "language": "English",
+      "country": "United States",
+      "whatsapp": "",
+      "facebook": "",
+      "instagram": "http://instagram.com/emmagodwin.2",
+      "pinterest": "",
+      "picture": "/uploads/profile-1783971187228-894854388.jpg"
+    },
+    "createdAt": "2026-07-13T19:33:07.375Z"
+  }
+]
