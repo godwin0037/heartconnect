@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -15,9 +14,18 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "mongodb": "7.4",
     "multer": "^2.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/godwin0037/heartconnect.git"
+  },
+  "bugs": {
+    "url": "https://github.com/godwin0037/heartconnect/issues"
+  },
+  "homepage": "https://github.com/godwin0037/heartconnect#readme"
 }
