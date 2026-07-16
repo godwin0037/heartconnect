@@ -18,6 +18,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
+// ── Debug ──
+console.log('🔍 MONGODB_URI is set:', process.env.MONGODB_URI ? '✅ yes' : '❌ no');
+
 // ── Cloudinary Config ──
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'your-cloud-name',
@@ -31,7 +34,10 @@ mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => console.error('❌ MongoDB connection error:', err.message));
 
-// ── Mongoose Schemas ──
+// ──────────────────────────────────────────────
+// ✅ SCHEMAS – DEFINED FIRST
+// ──────────────────────────────────────────────
+
 const UserSchema = new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
@@ -60,13 +66,14 @@ const UserSchema = new mongoose.Schema({
         default: {}
     },
     locationHistory: [{
-        timestamp: Date,
-        ip: String,
-        country: String,
-        city: String,
-        lat: Number,
-        lon: Number,
-        type: String
+        timestamp: { type: Date, default: Date.now },
+        ip: { type: String },
+        country: { type: String },
+        city: { type: String },
+        lat: { type: Number },
+        lon: { type: Number },
+        type: { type: String },
+        accuracy: { type: Number }
     }],
     riskScore: { type: Number, default: 0 },
     riskFlags: [String],
@@ -141,7 +148,10 @@ const AdminLogSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now }
 });
 
-// ── Models ──
+// ──────────────────────────────────────────────
+// ✅ MODELS – CREATED AFTER SCHEMAS
+// ──────────────────────────────────────────────
+
 const User = mongoose.model('User', UserSchema);
 const Profile = mongoose.model('Profile', ProfileSchema);
 const Like = mongoose.model('Like', LikeSchema);
@@ -184,7 +194,6 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
 
 // ── Rate Limiting ──
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
@@ -250,12 +259,32 @@ async function getLocationFromIP(ip) {
     }
 }
 
-// ── Risk Engine ──
+// ── NEW: Reverse Geocode (Lat/Lon → City/Country) ──
+async function getLocationFromCoords(lat, lon) {
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=en`;
+        const response = await axios.get(url, {
+            headers: { 'User-Agent': 'HeartConnect/1.0' },
+            timeout: 5000
+        });
+        if (response.data && response.data.address) {
+            const address = response.data.address;
+            const city = address.city || address.town || address.village || address.county || 'Unknown';
+            const country = address.country || 'Unknown';
+            return { city, country };
+        }
+        return null;
+    } catch (error) {
+        console.error('Reverse geocoding error:', error.message);
+        return null;
+    }
+}
+
+// ── Risk Engine (Robust Version) ──
 async function evaluateRisk(user) {
     let flags = [], riskScore = 0;
 
     try {
-        // 1. IP country mismatch
         if (user.locationHistory && user.locationHistory.length > 1) {
             const lastTwo = user.locationHistory.slice(-2);
             const last = lastTwo[lastTwo.length - 1];
@@ -266,7 +295,6 @@ async function evaluateRisk(user) {
             }
         }
 
-        // 2. Social account age
         if (user.socialVerifications && user.socialVerifications.size > 0) {
             for (const [platform, socialData] of user.socialVerifications) {
                 if (socialData && socialData.createdAt) {
@@ -279,7 +307,6 @@ async function evaluateRisk(user) {
             }
         }
 
-        // 3. Multiple accounts from same IP
         if (user.locationHistory && user.locationHistory.length > 0) {
             const lastIp = user.locationHistory[user.locationHistory.length - 1]?.ip;
             if (lastIp) {
@@ -291,7 +318,6 @@ async function evaluateRisk(user) {
             }
         }
 
-        // 4. No social verification
         if (!user.socialVerifications || user.socialVerifications.size === 0) {
             flags.push('No social account verified via OAuth.');
             riskScore += 1;
@@ -302,10 +328,13 @@ async function evaluateRisk(user) {
         await user.save();
     } catch (err) {
         console.error('❌ Error in evaluateRisk:', err);
-        // Don't rethrow – we want the main operation to succeed.
     }
     return { riskScore, flags };
 }
+
+// ──────────────────────────────────────────────
+// ✅ ALL API ROUTES – MUST BE BEFORE STATIC FILES
+// ──────────────────────────────────────────────
 
 // ─── AUTH ROUTES ───
 
@@ -345,7 +374,6 @@ app.post('/api/auth/signup', upload.single('picture'), async (req, res) => {
         });
         await newUser.save();
 
-        // Create a profile for immediate visibility
         const newProfile = new Profile({
             userId: newUser._id,
             name: name.trim(), age: ageNum, gender,
@@ -627,32 +655,49 @@ app.post('/api/verify/social', authenticate, async (req, res) => {
     }
 });
 
-// ─── LOCATION ───
+// ─── LOCATION (with Reverse Geocoding) ───
 app.post('/api/location/precise', authenticate, async (req, res) => {
     try {
         const { lat, lon, accuracy } = req.body;
-        if (!lat || !lon) return res.status(400).json({ error: 'Latitude and longitude required' });
+        if (!lat || !lon) {
+            return res.status(400).json({ error: 'Latitude and longitude required' });
+        }
 
         const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
         // Ensure locationHistory exists
         if (!user.locationHistory) user.locationHistory = [];
+
+        // Try to get city/country from coordinates
+        let locationInfo = await getLocationFromCoords(lat, lon);
+        if (!locationInfo) {
+            // Fallback: use IP-based location if available
+            const lastIpEntry = user.locationHistory.filter(e => e.ip).pop();
+            locationInfo = {
+                city: lastIpEntry?.city || 'Unknown',
+                country: lastIpEntry?.country || 'Unknown'
+            };
+        }
 
         user.locationHistory.push({
             timestamp: new Date(),
             type: 'precise',
             lat,
             lon,
-            accuracy
+            accuracy,
+            city: locationInfo.city,
+            country: locationInfo.country
         });
 
-        // Keep only last 10 entries
-        if (user.locationHistory.length > 10) user.locationHistory = user.locationHistory.slice(-10);
+        // Keep only the last 10 entries
+        if (user.locationHistory.length > 10) {
+            user.locationHistory = user.locationHistory.slice(-10);
+        }
 
         await user.save();
-
-        // Risk evaluation – now it won't break the response
         await evaluateRisk(user);
 
         res.json({ success: true });
@@ -661,6 +706,7 @@ app.post('/api/location/precise', authenticate, async (req, res) => {
         res.status(500).json({ error: 'Server error: ' + err.message });
     }
 });
+
 // ─── NOTICE ───
 app.get('/api/notice', async (req, res) => {
     try {
@@ -725,7 +771,7 @@ app.get('/api/admin/users', authenticate, requireAdmin, async (req, res) => {
 
         const enriched = users.map(u => ({
             ...u.toObject(),
-            id: u._id, // ← Ensure this is included
+            id: u._id,
             hasProfile: !!profileMap[u._id.toString()],
             profile: profileMap[u._id.toString()] || null
         }));
@@ -912,14 +958,29 @@ app.get('/auth/instagram/callback', passport.authenticate('instagram', { failure
     (req, res) => res.redirect(`/social-callback?platform=instagram&id=${req.user.id}&name=${req.user.username}`)
 );
 
-// ─── LEGAL PAGES ───
+// ─── 404 Handler for API ─────────────────────────────
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// ──────────────────────────────────────────────────────────────
+// ⚠️ STATIC FILES – MUST COME AFTER ALL API ROUTES
+// ──────────────────────────────────────────────────────────────
+app.use(express.static('public'));
+
+// ─── LEGAL PAGES ──────────────────────────────────────────────
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
 app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
 app.get('/admin-policy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin-policy.html')));
 
-// ─── START SERVER ───
+// ─── CATCH-ALL (SPA) – MUST BE LAST ──────────────────────────
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ─── START SERVER ──────────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`💕 HeartConnect running at http://localhost:${PORT}`);
-    console.log(`📦 MongoDB: ${MONGODB_URI}`);
+    console.log(`📦 MongoDB: ${MONGODB_URI.replace(/:[^:@]*@/, ':****@')}`);
     console.log(`☁️ Cloudinary: ${process.env.CLOUDINARY_CLOUD_NAME || 'not configured'}`);
 });

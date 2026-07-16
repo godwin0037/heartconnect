@@ -1082,6 +1082,20 @@
             transform: translateY(-2px);
         }
 
+        /* ── VERIFICATION CARDS ── */
+        .verification-card {
+            background: #fffdfd;
+            border-radius: 16px;
+            padding: 1.2rem;
+            box-shadow: 0 4px 12px rgba(242,160,187,0.15);
+            border: 1px solid #f0dae3;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .verification-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(242,160,187,0.25);
+        }
+
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
@@ -1138,6 +1152,7 @@
             .admin-table th, .admin-table td { padding: 0.5rem; }
             .chat-modal { width: calc(100% - 40px); right: 20px; bottom: 80px; }
             .modal-box .form-grid { grid-template-columns: 1fr; }
+            .verification-card { padding: 1rem !important; }
         }
         @media (max-width: 480px) {
             .auth-box { padding: 1.5rem; }
@@ -1279,7 +1294,6 @@
                     <label><i class="fab fa-pinterest" style="color:#E60023;"></i> Pinterest <span style="font-weight:400;font-size:0.75rem;color:#b08a9a;">(optional)</span></label>
                     <input type="url" id="signupPinterest" placeholder="https://pinterest.com/..." />
                 </div>
-                <!-- NEW: NOTE ABOUT VERIFICATION -->
                 <div class="social-hint" style="font-weight:500; color:#6b4e5e; margin-top:0.3rem;">
                     <i class="fas fa-info-circle"></i> After registration, you can verify your social accounts in Settings to prove authenticity.
                 </div>
@@ -1342,8 +1356,11 @@
                 <div class="admin-tab-content" id="tab-chats">
                     <div class="admin-table-wrap" id="adminChatContent"></div>
                 </div>
-                <!-- Security Tab -->
+                <!-- Security Tab (UPDATED with Refresh Button) -->
                 <div class="admin-tab-content" id="tab-security">
+                    <button class="btn-filter btn-apply" id="refreshSecurityBtn" style="margin-bottom:1rem;">
+                        <i class="fas fa-sync-alt"></i> Refresh Security Data
+                    </button>
                     <div class="admin-table-wrap" id="adminSecurityContent"></div>
                 </div>
                 <!-- Notice Tab -->
@@ -1500,18 +1517,63 @@
                 <h2 class="romantic-heading">⚙️ Account Settings</h2>
                 <p class="form-subtitle">Manage your account and security</p>
 
-                <!-- Verification -->
-                <div style="background:#f9eef3; padding:1.5rem; border-radius:20px; margin-bottom:1.5rem;">
-                    <h3 style="font-family:'Dancing Script',cursive; font-size:1.5rem; margin-bottom:0.3rem;">🔒 Social Verification</h3>
-                    <p style="color:#7a5e6b; margin-bottom:1rem;">Verify your social accounts to prove you're a real person and protect your profile from impersonation.</p>
-                    <div style="display:flex; flex-wrap:wrap; gap:0.8rem; align-items:center;">
-                        <button id="verifyFacebookBtn" class="btn-filter btn-apply" style="background:#1877F2; border-color:#1877F2;"><i class="fab fa-facebook"></i> Verify Facebook</button>
-                        <button id="verifyInstagramBtn" class="btn-filter btn-apply" style="background:#E4405F; border-color:#E4405F;"><i class="fab fa-instagram"></i> Verify Instagram</button>
-                        <button id="shareLocationBtn" class="btn-filter btn-apply" style="background:#6b4e5e; border-color:#6b4e5e;"><i class="fas fa-location-dot"></i> Share Location</button>
-                        <button id="showVerificationReason" class="btn-filter btn-reset" style="font-size:0.8rem; padding:0.2rem 0.8rem;">
-                            <i class="fas fa-info-circle"></i> Why do we need this?
+                <!-- Verification Cards -->
+                <div style="margin-bottom:1.5rem;">
+                    <h3 style="font-family:'Dancing Script',cursive; font-size:1.5rem; margin-bottom:0.3rem;">🔒 Account Verification</h3>
+                    <p style="color:#7a5e6b; margin-bottom:1.2rem;">Verify your identity to increase trust and protect your profile from impersonation.</p>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.2rem;">
+                        <!-- Facebook Card -->
+                        <div class="verification-card">
+                            <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem;">
+                                <i class="fab fa-facebook" style="font-size:1.8rem; color:#1877F2;"></i>
+                                <span style="font-weight:600; font-size:1.1rem;">Facebook</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:#6b4e5e; margin-bottom:0.8rem;">
+                                <span id="fbVerificationStatus" style="font-weight:600;">⚠️ Not verified</span>
+                            </div>
+                            <button id="verifyFacebookBtn" class="btn-filter btn-apply" style="background:#1877F2; border-color:#1877F2; width:100%; padding:0.4rem 1rem; font-size:0.9rem;">
+                                <i class="fab fa-facebook"></i> Verify
+                            </button>
+                        </div>
+
+                        <!-- Instagram Card -->
+                        <div class="verification-card">
+                            <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem;">
+                                <i class="fab fa-instagram" style="font-size:1.8rem; color:#E4405F;"></i>
+                                <span style="font-weight:600; font-size:1.1rem;">Instagram</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:#6b4e5e; margin-bottom:0.8rem;">
+                                <span id="igVerificationStatus" style="font-weight:600;">⚠️ Not verified</span>
+                            </div>
+                            <button id="verifyInstagramBtn" class="btn-filter btn-apply" style="background:#E4405F; border-color:#E4405F; width:100%; padding:0.4rem 1rem; font-size:0.9rem;">
+                                <i class="fab fa-instagram"></i> Verify
+                            </button>
+                        </div>
+
+                        <!-- Location Card -->
+                        <div class="verification-card">
+                            <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem;">
+                                <i class="fas fa-location-dot" style="font-size:1.8rem; color:#6b4e5e;"></i>
+                                <span style="font-weight:600; font-size:1.1rem;">Location</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:#6b4e5e; margin-bottom:0.8rem;">
+                                <span id="locVerificationStatus" style="font-weight:600;">⚠️ Not shared</span>
+                            </div>
+                            <button id="shareLocationBtn" class="btn-filter btn-apply" style="background:#6b4e5e; border-color:#6b4e5e; width:100%; padding:0.4rem 1rem; font-size:0.9rem;">
+                                <i class="fas fa-location-dot"></i> Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Info & Global Status -->
+                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-top:1.2rem; padding-top:1rem; border-top:1px solid #f0dae3;">
+                        <div style="display:flex; gap:0.8rem; align-items:center;">
+                            <span id="verificationStatus" style="font-weight:600; font-size:0.95rem;"></span>
+                        </div>
+                        <button id="showVerificationReason" class="btn-filter btn-reset" style="font-size:0.8rem; padding:0.3rem 1rem;">
+                            <i class="fas fa-info-circle"></i> Why verify?
                         </button>
-                        <span id="verificationStatus" style="font-weight:600; margin-left:0.5rem;"></span>
                     </div>
                 </div>
 
@@ -1866,12 +1928,13 @@
         }
 
         // ──────────────────────────────────────────────────────────
-        //  VERIFICATION UI
+        //  UPDATED VERIFICATION UI
         // ──────────────────────────────────────────────────────────
         function updateVerificationUI() {
             const verifications = currentUser.socialVerifications || {};
             const count = Object.keys(verifications).length;
             const status = document.getElementById('verificationStatus');
+
             if (count > 0) {
                 status.innerHTML = `✅ Verified (${count} social ${count > 1 ? 'accounts' : 'account'})`;
                 status.style.color = '#4caf50';
@@ -1879,13 +1942,32 @@
                 status.innerHTML = '⚠️ Not verified';
                 status.style.color = '#ff9800';
             }
+
+            const fbStatus = document.getElementById('fbVerificationStatus');
+            const igStatus = document.getElementById('igVerificationStatus');
+            const locStatus = document.getElementById('locVerificationStatus');
+
+            if (verifications.facebook) {
+                fbStatus.innerHTML = '✅ Verified';
+                fbStatus.style.color = '#4caf50';
+            } else {
+                fbStatus.innerHTML = '⚠️ Not verified';
+                fbStatus.style.color = '#ff9800';
+            }
+
+            if (verifications.instagram) {
+                igStatus.innerHTML = '✅ Verified';
+                igStatus.style.color = '#4caf50';
+            } else {
+                igStatus.innerHTML = '⚠️ Not verified';
+                igStatus.style.color = '#ff9800';
+            }
         }
 
         // ──────────────────────────────────────────────────────────
         //  RENDER PROFILES
         // ──────────────────────────────────────────────────────────
         function renderCard(p) {
-            // FIX: Check for any valid picture URL, not just /uploads/
             const imgSrc = p.picture && p.picture.trim() !== '' ? p.picture : 'https://i.pravatar.cc/400?img=50';
             const isAdmin = currentUser && currentUser.role === 'admin';
             const isOwner = currentUser && p.userId === currentUser.id;
@@ -1932,7 +2014,6 @@
                 return;
             }
             grid.innerHTML = profiles.map(p => renderCard(p)).join('');
-            // FIX: Use string ID directly, no parseInt
             document.querySelectorAll('.profile-card').forEach(card => {
                 card.addEventListener('click', function(e) {
                     const id = this.dataset.id;
@@ -1976,7 +2057,6 @@
             if (e.target === this) this.classList.remove('active');
         });
         document.getElementById('reportSubmit').addEventListener('click', async function() {
-            // FIX: Use string ID directly, no parseInt
             const profileId = document.getElementById('reportProfileId').value;
             const reason = document.getElementById('reportReason').value;
             const description = document.getElementById('reportDescription').value.trim();
@@ -2014,7 +2094,6 @@
             if (!profile) return showToast('Profile not found');
             document.getElementById('gridSection').style.display = 'none';
             document.getElementById('profileDetail').classList.add('active');
-            // FIX: Check for any valid picture URL
             const imgSrc = profile.picture && profile.picture.trim() !== '' ? profile.picture : 'https://i.pravatar.cc/400?img=50';
             document.getElementById('detailImage').src = imgSrc;
             document.getElementById('detailName').textContent = profile.name;
@@ -2064,7 +2143,6 @@
                 showToast('Link copied!');
             }
         });
-        // FIX: Hash change listener – use string ID
         window.addEventListener('hashchange', function() {
             if (window.location.hash.startsWith('#profile-')) {
                 const id = window.location.hash.replace('#profile-', '');
@@ -2249,7 +2327,7 @@
             }
         }
 
-        // Share location
+        // Share location – UPDATED to update the card status
         document.getElementById('shareLocationBtn').addEventListener('click', function() {
             if (!navigator.geolocation) {
                 showToast('Geolocation not supported by your browser.');
@@ -2268,8 +2346,14 @@
                     })
                     .then(res => res.json())
                     .then(data => {
-                        if (data.success) showToast('Location shared successfully!');
-                        else showToast('Failed to share location.');
+                        if (data.success) {
+                            showToast('Location shared successfully!');
+                            const locStatus = document.getElementById('locVerificationStatus');
+                            locStatus.innerHTML = '✅ Shared';
+                            locStatus.style.color = '#4caf50';
+                        } else {
+                            showToast('Failed to share location.');
+                        }
                     })
                     .catch(err => showToast('Error sharing location'));
                 },
@@ -2504,10 +2588,9 @@
             try {
                 const data = await apiFetch('/api/admin/users');
                 console.log('📌 Loaded users from API:', data);
-                // Ensure each user has an id field
                 allUsers = data.map(u => ({
                     ...u,
-                    id: u.id || u._id // MongoDB returns _id, but we use id
+                    id: u.id || u._id
                 }));
                 renderAdminUsers();
             } catch (err) {
@@ -2536,7 +2619,6 @@
             </tr></thead><tbody>`;
             
             allUsers.forEach(u => {
-                // Make sure we have an ID
                 const userId = u.id || u._id;
                 console.log('📌 Rendering user:', u.username, 'ID:', userId);
                 
@@ -2562,7 +2644,6 @@
             html += `</tbody></table>`;
             container.innerHTML = html;
 
-            // ── Approve Button Handler ──
             const approveButtons = container.querySelectorAll('.btn-approve');
             console.log('📌 Found approve buttons:', approveButtons.length);
             
@@ -2591,7 +2672,6 @@
                         console.log('📌 Response:', result);
                         showToast(`✅ ${username} approved successfully!`);
                         
-                        // Reload both user list and profiles
                         await loadAdminUsers();
                         await loadProfiles();
                         
@@ -2602,7 +2682,6 @@
                 });
             });
 
-            // ── Promote Button Handler ──
             container.querySelectorAll('.btn-promote').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     const userId = this.dataset.id;
@@ -2619,7 +2698,6 @@
                 });
             });
 
-            // ── Delete Button Handler ──
             container.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     const userId = this.dataset.id;
@@ -2704,7 +2782,7 @@
             }));
         }
 
-        // ─── Admin Security ───
+        // ─── Admin Security (UPDATED with location display) ───
         async function loadAdminSecurity() {
             try {
                 const users = await apiFetch('/api/admin/users');
@@ -2714,28 +2792,52 @@
 
         function renderSecurityTable(users) {
             const container = document.getElementById('adminSecurityContent');
-            if (!users.length) return container.innerHTML = '<p style="padding:1rem;color:#b08a9a;">No users.</p>';
+            if (!users || !users.length) {
+                container.innerHTML = '<p style="padding:1rem;color:#b08a9a;">No users.</p>';
+                return;
+            }
             let html = `<table class="admin-table"><thead><tr>
-                <th>ID</th><th>Username</th><th>Risk Score</th><th>Flags</th><th>Verified</th><th>Last Location</th>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Risk Score</th>
+                <th>Flags</th>
+                <th>Verified</th>
+                <th>Last Location</th>
+                <th>Location History</th>
             </tr></thead><tbody>`;
+
             users.forEach(u => {
                 const verified = u.socialVerifications && Object.keys(u.socialVerifications).length > 0 ? '✅' : '❌';
-                const lastLoc = u.locationHistory && u.locationHistory.length > 0 ? u.locationHistory[u.locationHistory.length-1] : null;
-                const locStr = lastLoc ? `${lastLoc.city || ''}, ${lastLoc.country || ''}` : 'N/A';
+                const lastLoc = u.locationHistory && u.locationHistory.length > 0 ? u.locationHistory[u.locationHistory.length - 1] : null;
+                let locStr = 'N/A';
+                let locTime = '';
+                if (lastLoc) {
+                    locStr = lastLoc.city && lastLoc.country ? `${lastLoc.city}, ${lastLoc.country}` : 'Unknown';
+                    locTime = lastLoc.timestamp ? new Date(lastLoc.timestamp).toLocaleString() : '';
+                }
                 const flags = (u.riskFlags || []).join('; ') || 'None';
                 const riskColor = u.riskScore >= 3 ? 'red' : u.riskScore >= 2 ? 'orange' : 'green';
+                const historyCount = u.locationHistory ? u.locationHistory.length : 0;
+
                 html += `<tr>
                     <td>${u.id}</td>
                     <td><strong>${u.username}</strong></td>
                     <td><span style="color:${riskColor}; font-weight:600;">${u.riskScore || 0}</span></td>
                     <td style="font-size:0.8rem; max-width:250px;">${flags}</td>
                     <td>${verified}</td>
-                    <td>${locStr}</td>
+                    <td>${locStr}${locTime ? `<br><span style="font-size:0.7rem;color:#b08a9a;">${locTime}</span>` : ''}</td>
+                    <td>${historyCount} entries</td>
                 </tr>`;
             });
             html += `</tbody></table>`;
             container.innerHTML = html;
         }
+
+        // ─── Refresh Security Button ───
+        document.getElementById('refreshSecurityBtn').addEventListener('click', function() {
+            loadAdminSecurity();
+            showToast('Security data refreshed!');
+        });
 
         // ─── Admin Notice ───
         async function loadAdminNotice() {
@@ -2881,7 +2983,6 @@
                 setAuthOverlay(true);
                 showLoginForm();
             }
-            // Auto-refresh chat every 10s
             setInterval(() => {
                 if (currentUser && currentUser.role !== 'admin' && document.getElementById('chatModal').classList.contains('active')) {
                     loadUserChat();
