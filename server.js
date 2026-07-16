@@ -253,43 +253,57 @@ async function getLocationFromIP(ip) {
 // ── Risk Engine ──
 async function evaluateRisk(user) {
     let flags = [], riskScore = 0;
-    if (user.locationHistory && user.locationHistory.length > 1) {
-        const lastTwo = user.locationHistory.slice(-2);
-        const last = lastTwo[lastTwo.length - 1];
-        const prev = lastTwo[lastTwo.length - 2];
-        if (last.country && prev.country && last.country !== prev.country) {
-            flags.push('Country mismatch: login location changed.');
-            riskScore += 2;
-        }
-    }
-    const socialKeys = Object.keys(user.socialVerifications || {});
-    for (const platform of socialKeys) {
-        const socialData = user.socialVerifications.get(platform);
-        if (socialData && socialData.createdAt) {
-            const daysOld = (Date.now() - new Date(socialData.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-            if (daysOld < 7) {
-                flags.push(`Social account (${platform}) is less than 7 days old.`);
-                riskScore += 1;
+
+    try {
+        // 1. IP country mismatch
+        if (user.locationHistory && user.locationHistory.length > 1) {
+            const lastTwo = user.locationHistory.slice(-2);
+            const last = lastTwo[lastTwo.length - 1];
+            const prev = lastTwo[lastTwo.length - 2];
+            if (last.country && prev.country && last.country !== prev.country) {
+                flags.push('Country mismatch: login location changed.');
+                riskScore += 2;
             }
         }
-    }
-    if (user.locationHistory.length > 0) {
-        const lastIp = user.locationHistory[user.locationHistory.length - 1]?.ip;
-        if (lastIp) {
-            const sameIPCount = await User.countDocuments({ 'locationHistory.ip': lastIp });
-            if (sameIPCount > 3) {
-                flags.push(`More than 3 accounts from same IP (${sameIPCount}).`);
-                riskScore += 3;
+
+        // 2. Social account age
+        if (user.socialVerifications && user.socialVerifications.size > 0) {
+            for (const [platform, socialData] of user.socialVerifications) {
+                if (socialData && socialData.createdAt) {
+                    const daysOld = (Date.now() - new Date(socialData.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+                    if (daysOld < 7) {
+                        flags.push(`Social account (${platform}) is less than 7 days old.`);
+                        riskScore += 1;
+                    }
+                }
             }
         }
+
+        // 3. Multiple accounts from same IP
+        if (user.locationHistory && user.locationHistory.length > 0) {
+            const lastIp = user.locationHistory[user.locationHistory.length - 1]?.ip;
+            if (lastIp) {
+                const sameIPCount = await User.countDocuments({ 'locationHistory.ip': lastIp });
+                if (sameIPCount > 3) {
+                    flags.push(`More than 3 accounts from same IP (${sameIPCount}).`);
+                    riskScore += 3;
+                }
+            }
+        }
+
+        // 4. No social verification
+        if (!user.socialVerifications || user.socialVerifications.size === 0) {
+            flags.push('No social account verified via OAuth.');
+            riskScore += 1;
+        }
+
+        user.riskScore = riskScore;
+        user.riskFlags = flags;
+        await user.save();
+    } catch (err) {
+        console.error('❌ Error in evaluateRisk:', err);
+        // Don't rethrow – we want the main operation to succeed.
     }
-    if (!user.socialVerifications || user.socialVerifications.size === 0) {
-        flags.push('No social account verified via OAuth.');
-        riskScore += 1;
-    }
-    user.riskScore = riskScore;
-    user.riskFlags = flags;
-    await user.save();
     return { riskScore, flags };
 }
 
@@ -621,16 +635,32 @@ app.post('/api/location/precise', authenticate, async (req, res) => {
 
         const user = await User.findById(req.user.id);
         if (!user) return res.status(404).json({ error: 'User not found' });
-        user.locationHistory.push({ timestamp: new Date(), type: 'precise', lat, lon, accuracy });
+
+        // Ensure locationHistory exists
+        if (!user.locationHistory) user.locationHistory = [];
+
+        user.locationHistory.push({
+            timestamp: new Date(),
+            type: 'precise',
+            lat,
+            lon,
+            accuracy
+        });
+
+        // Keep only last 10 entries
         if (user.locationHistory.length > 10) user.locationHistory = user.locationHistory.slice(-10);
+
         await user.save();
+
+        // Risk evaluation – now it won't break the response
         await evaluateRisk(user);
+
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: 'Server error' });
+        console.error('❌ Location error:', err);
+        res.status(500).json({ error: 'Server error: ' + err.message });
     }
 });
-
 // ─── NOTICE ───
 app.get('/api/notice', async (req, res) => {
     try {

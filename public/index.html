@@ -1174,7 +1174,7 @@
                     </div>
                 </div>
                 <div class="error-msg" id="loginError"></div>
-                <button class="btn-primary" id="loginBtn"><i class="fas fa-sign-in-alt" style="margin-right:0.5rem;"></i> Log In</button>
+                <button class="btn-primary" type="button" id="loginBtn"><i class="fas fa-sign-in-alt" style="margin-right:0.5rem;"></i> Log In</button>
                 <div class="switch-link">Don't have an account? <span id="showSignup">Sign up now</span></div>
             </div>
 
@@ -1286,7 +1286,7 @@
                 <div class="social-hint"><i class="fas fa-info-circle"></i> At least one social link required.</div>
                 <div class="error-msg" id="signupError"></div>
                 <div class="success-msg" id="signupSuccess"></div>
-                <button class="btn-primary" id="signupBtn"><i class="fas fa-heart" style="margin-right:0.5rem;"></i> Create Account</button>
+                <button class="btn-primary" type="button" id="signupBtn"><i class="fas fa-heart" style="margin-right:0.5rem;"></i> Create Account</button>
                 <div class="switch-link">Already have an account? <span id="showLogin">Log in</span></div>
             </div>
         </div>
@@ -1306,10 +1306,10 @@
             <header class="site-header">
                 <div class="top-bar">
                     <span class="greeting" id="userGreeting">👋 Welcome</span>
-                    <button class="settings-btn" id="settingsBtn" style="display:none;"><i class="fas fa-cog"></i> Settings</button>
-                    <button class="support-btn" id="supportBtn"><i class="fas fa-headset"></i> Support</button>
-                    <button class="admin-btn" id="adminLinkBtn" style="display:none;"><i class="fas fa-user-shield"></i> Admin</button>
-                    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <button class="settings-btn" type="button" id="settingsBtn" style="display:none;"><i class="fas fa-cog"></i> Settings</button>
+                    <button class="support-btn" type="button" id="supportBtn"><i class="fas fa-headset"></i> Support</button>
+                    <button class="admin-btn" type="button" id="adminLinkBtn" style="display:none;"><i class="fas fa-user-shield"></i> Admin</button>
+                    <button class="logout-btn" type="button" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
                 <h1 class="romantic-heading"><span>❤</span> HeartConnect</h1>
                 <p class="tagline">where hearts find their way</p>
@@ -1330,7 +1330,7 @@
                 <!-- Users Tab -->
                 <div class="admin-tab-content active" id="tab-users">
                     <div class="admin-toolbar">
-                        <button class="btn-export-admin" id="exportAdminBtn"><i class="fas fa-download"></i> Export New Users (JSON)</button>
+                        <button class="btn-export-admin" type="button" id="exportAdminBtn"><i class="fas fa-download"></i> Export New Users (JSON)</button>
                     </div>
                     <div class="admin-table-wrap" id="adminUserContent"></div>
                 </div>
@@ -1885,7 +1885,8 @@
         //  RENDER PROFILES
         // ──────────────────────────────────────────────────────────
         function renderCard(p) {
-            const imgSrc = p.picture && p.picture.startsWith('/uploads/') ? p.picture : 'https://i.pravatar.cc/400?img=50';
+            // FIX: Check for any valid picture URL, not just /uploads/
+            const imgSrc = p.picture && p.picture.trim() !== '' ? p.picture : 'https://i.pravatar.cc/400?img=50';
             const isAdmin = currentUser && currentUser.role === 'admin';
             const isOwner = currentUser && p.userId === currentUser.id;
             const deleteBtn = isAdmin ? `<button class="delete-btn" data-id="${p.id}" onclick="event.stopPropagation(); deleteProfile(${p.id});"><i class="fas fa-trash-alt"></i></button>` : '';
@@ -1931,10 +1932,11 @@
                 return;
             }
             grid.innerHTML = profiles.map(p => renderCard(p)).join('');
+            // FIX: Use string ID directly, no parseInt
             document.querySelectorAll('.profile-card').forEach(card => {
                 card.addEventListener('click', function(e) {
-                    const id = parseInt(this.dataset.id, 10);
-                    if (!isNaN(id)) window.location.hash = 'profile-' + id;
+                    const id = this.dataset.id;
+                    if (id) window.location.hash = 'profile-' + id;
                 });
             });
         }
@@ -1974,7 +1976,8 @@
             if (e.target === this) this.classList.remove('active');
         });
         document.getElementById('reportSubmit').addEventListener('click', async function() {
-            const profileId = parseInt(document.getElementById('reportProfileId').value);
+            // FIX: Use string ID directly, no parseInt
+            const profileId = document.getElementById('reportProfileId').value;
             const reason = document.getElementById('reportReason').value;
             const description = document.getElementById('reportDescription').value.trim();
             if (!reason) return showToast('Please select a reason');
@@ -2011,7 +2014,8 @@
             if (!profile) return showToast('Profile not found');
             document.getElementById('gridSection').style.display = 'none';
             document.getElementById('profileDetail').classList.add('active');
-            const imgSrc = profile.picture && profile.picture.startsWith('/uploads/') ? profile.picture : 'https://i.pravatar.cc/400?img=50';
+            // FIX: Check for any valid picture URL
+            const imgSrc = profile.picture && profile.picture.trim() !== '' ? profile.picture : 'https://i.pravatar.cc/400?img=50';
             document.getElementById('detailImage').src = imgSrc;
             document.getElementById('detailName').textContent = profile.name;
             document.getElementById('detailAgeGender').textContent = `${profile.age} years · ${profile.gender}`;
@@ -2060,10 +2064,11 @@
                 showToast('Link copied!');
             }
         });
+        // FIX: Hash change listener – use string ID
         window.addEventListener('hashchange', function() {
             if (window.location.hash.startsWith('#profile-')) {
-                const id = parseInt(window.location.hash.replace('#profile-', ''), 10);
-                if (!isNaN(id)) showProfileDetail(id);
+                const id = window.location.hash.replace('#profile-', '');
+                if (id) showProfileDetail(id);
             } else showGrid();
         });
 
@@ -2495,142 +2500,143 @@
         });
 
         // ─── Admin Users ───
-       async function loadAdminUsers() {
-    try {
-        const data = await apiFetch('/api/admin/users');
-        console.log('📌 Loaded users from API:', data);
-        // Ensure each user has an id field
-        allUsers = data.map(u => ({
-            ...u,
-            id: u.id || u._id // MongoDB returns _id, but we use id
-        }));
-        renderAdminUsers();
-    } catch (err) {
-        console.error('❌ Error loading users:', err);
-        showToast('Could not load users');
-    }
-}
-function renderAdminUsers() {
-    const container = document.getElementById('adminUserContent');
-    if (!allUsers || !allUsers.length) {
-        container.innerHTML = '<p style="padding:1rem;color:#b08a9a;">No users found.</p>';
-        return;
-    }
-    
-    console.log('📌 Rendering admin users table. Users:', allUsers);
-    
-    let html = `<table class="admin-table"><thead><tr>
-        <th>ID</th>
-        <th>Username</th>
-        <th>Role</th>
-        <th>Status</th>
-        <th>Profile</th>
-        <th>Exported</th>
-        <th>Actions</th>
-    </tr></thead><tbody>`;
-    
-    allUsers.forEach(u => {
-        // Make sure we have an ID
-        const userId = u.id || u._id;
-        console.log('📌 Rendering user:', u.username, 'ID:', userId);
-        
-        const prof = profiles.find(p => p.userId === userId);
-        const exported = prof ? (prof.exported ? '✅' : '❌') : '—';
-        const hasProfile = !!prof;
-        const isPending = !u.approved && u.role !== 'admin';
-        
-        html += `<tr>
-            <td>${userId}</td>
-            <td><strong>${u.username}</strong></td>
-            <td><span class="badge ${u.role === 'admin' ? 'admin' : 'user'}">${u.role}</span></td>
-            <td><span class="badge ${u.approved ? 'approved' : 'pending'}">${u.approved ? 'Approved' : 'Pending'}</span></td>
-            <td>${hasProfile ? '✅' : '❌'}</td>
-            <td>${exported}</td>
-            <td class="actions">
-                ${isPending ? `<button class="btn-approve" data-id="${userId}" data-username="${u.username}">✅ Approve</button>` : ''}
-                ${u.role !== 'admin' ? `<button class="btn-promote" data-id="${userId}">⭐ Make Admin</button>` : ''}
-                <button class="btn-delete" data-id="${userId}">🗑️ Delete</button>
-            </td>
-        </tr>`;
-    });
-    html += `</tbody></table>`;
-    container.innerHTML = html;
+        async function loadAdminUsers() {
+            try {
+                const data = await apiFetch('/api/admin/users');
+                console.log('📌 Loaded users from API:', data);
+                // Ensure each user has an id field
+                allUsers = data.map(u => ({
+                    ...u,
+                    id: u.id || u._id // MongoDB returns _id, but we use id
+                }));
+                renderAdminUsers();
+            } catch (err) {
+                console.error('❌ Error loading users:', err);
+                showToast('Could not load users');
+            }
+        }
 
-    // ── Approve Button Handler ──
-    const approveButtons = container.querySelectorAll('.btn-approve');
-    console.log('📌 Found approve buttons:', approveButtons.length);
-    
-    approveButtons.forEach(btn => {
-        btn.addEventListener('click', async function(e) {
-            e.stopPropagation();
-            const userId = this.dataset.id;
-            const username = this.dataset.username || 'User';
-            
-            console.log('📌 Approve button clicked for user ID:', userId, 'Username:', username);
-            
-            if (!userId || userId === 'undefined') {
-                console.error('❌ Invalid user ID:', userId);
-                showToast('❌ Error: Invalid user ID. Please refresh and try again.');
+        function renderAdminUsers() {
+            const container = document.getElementById('adminUserContent');
+            if (!allUsers || !allUsers.length) {
+                container.innerHTML = '<p style="padding:1rem;color:#b08a9a;">No users found.</p>';
                 return;
             }
             
-            if (!confirm(`Are you sure you want to approve "${username}"?`)) return;
+            console.log('📌 Rendering admin users table. Users:', allUsers);
             
-            try {
-                console.log('📌 Sending PUT request to /api/admin/users/' + userId + '/approve');
-                const result = await apiFetch(`/api/admin/users/${userId}/approve`, { 
-                    method: 'PUT' 
+            let html = `<table class="admin-table"><thead><tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Profile</th>
+                <th>Exported</th>
+                <th>Actions</th>
+            </tr></thead><tbody>`;
+            
+            allUsers.forEach(u => {
+                // Make sure we have an ID
+                const userId = u.id || u._id;
+                console.log('📌 Rendering user:', u.username, 'ID:', userId);
+                
+                const prof = profiles.find(p => p.userId === userId);
+                const exported = prof ? (prof.exported ? '✅' : '❌') : '—';
+                const hasProfile = !!prof;
+                const isPending = !u.approved && u.role !== 'admin';
+                
+                html += `<tr>
+                    <td>${userId}</td>
+                    <td><strong>${u.username}</strong></td>
+                    <td><span class="badge ${u.role === 'admin' ? 'admin' : 'user'}">${u.role}</span></td>
+                    <td><span class="badge ${u.approved ? 'approved' : 'pending'}">${u.approved ? 'Approved' : 'Pending'}</span></td>
+                    <td>${hasProfile ? '✅' : '❌'}</td>
+                    <td>${exported}</td>
+                    <td class="actions">
+                        ${isPending ? `<button class="btn-approve" data-id="${userId}" data-username="${u.username}">✅ Approve</button>` : ''}
+                        ${u.role !== 'admin' ? `<button class="btn-promote" data-id="${userId}">⭐ Make Admin</button>` : ''}
+                        <button class="btn-delete" data-id="${userId}">🗑️ Delete</button>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+
+            // ── Approve Button Handler ──
+            const approveButtons = container.querySelectorAll('.btn-approve');
+            console.log('📌 Found approve buttons:', approveButtons.length);
+            
+            approveButtons.forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.stopPropagation();
+                    const userId = this.dataset.id;
+                    const username = this.dataset.username || 'User';
+                    
+                    console.log('📌 Approve button clicked for user ID:', userId, 'Username:', username);
+                    
+                    if (!userId || userId === 'undefined') {
+                        console.error('❌ Invalid user ID:', userId);
+                        showToast('❌ Error: Invalid user ID. Please refresh and try again.');
+                        return;
+                    }
+                    
+                    if (!confirm(`Are you sure you want to approve "${username}"?`)) return;
+                    
+                    try {
+                        console.log('📌 Sending PUT request to /api/admin/users/' + userId + '/approve');
+                        const result = await apiFetch(`/api/admin/users/${userId}/approve`, { 
+                            method: 'PUT' 
+                        });
+                        
+                        console.log('📌 Response:', result);
+                        showToast(`✅ ${username} approved successfully!`);
+                        
+                        // Reload both user list and profiles
+                        await loadAdminUsers();
+                        await loadProfiles();
+                        
+                    } catch (error) {
+                        console.error('❌ Approve error:', error);
+                        showToast('❌ Failed to approve user: ' + error.message);
+                    }
                 });
-                
-                console.log('📌 Response:', result);
-                showToast(`✅ ${username} approved successfully!`);
-                
-                // Reload both user list and profiles
-                await loadAdminUsers();
-                await loadProfiles();
-                
-            } catch (error) {
-                console.error('❌ Approve error:', error);
-                showToast('❌ Failed to approve user: ' + error.message);
-            }
-        });
-    });
+            });
 
-    // ── Promote Button Handler ──
-    container.querySelectorAll('.btn-promote').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const userId = this.dataset.id;
-            if (!userId || userId === 'undefined') {
-                showToast('❌ Invalid user ID');
-                return;
-            }
-            if (!confirm('Promote this user to admin?')) return;
-            try {
-                await apiFetch(`/api/admin/users/${userId}/promote`, { method: 'PUT' });
-                showToast('User promoted!');
-                loadAdminUsers();
-            } catch(e){ showToast('Error: ' + e.message); }
-        });
-    });
+            // ── Promote Button Handler ──
+            container.querySelectorAll('.btn-promote').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const userId = this.dataset.id;
+                    if (!userId || userId === 'undefined') {
+                        showToast('❌ Invalid user ID');
+                        return;
+                    }
+                    if (!confirm('Promote this user to admin?')) return;
+                    try {
+                        await apiFetch(`/api/admin/users/${userId}/promote`, { method: 'PUT' });
+                        showToast('User promoted!');
+                        loadAdminUsers();
+                    } catch(e){ showToast('Error: ' + e.message); }
+                });
+            });
 
-    // ── Delete Button Handler ──
-    container.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const userId = this.dataset.id;
-            if (!userId || userId === 'undefined') {
-                showToast('❌ Invalid user ID');
-                return;
-            }
-            if (!confirm('Delete this user?')) return;
-            try {
-                await apiFetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
-                showToast('User deleted!');
-                loadAdminUsers();
-                loadProfiles();
-            } catch(e){ showToast('Error: ' + e.message); }
-        });
-    });
-}
+            // ── Delete Button Handler ──
+            container.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const userId = this.dataset.id;
+                    if (!userId || userId === 'undefined') {
+                        showToast('❌ Invalid user ID');
+                        return;
+                    }
+                    if (!confirm('Delete this user?')) return;
+                    try {
+                        await apiFetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+                        showToast('User deleted!');
+                        loadAdminUsers();
+                        loadProfiles();
+                    } catch(e){ showToast('Error: ' + e.message); }
+                });
+            });
+        }
 
         // ─── Admin Reports ───
         async function loadAdminReports() {
