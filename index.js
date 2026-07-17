@@ -15,7 +15,6 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
 // ── Debug ──
@@ -977,13 +976,22 @@ app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ter
 app.get('/admin-policy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin-policy.html')));
 
 
-
+app.get('/', (req, res) => {
+    res.send('Hello from HeartConnect!');
+});
 
 // ─── CATCH-ALL (SPA) – MUST BE LAST ──────────────────────────
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-// Start server – bind to 0.0.0.0
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`💕 HeartConnect running at http://localhost:${PORT}`);
+
+// Use PORT provided in environment or default to 3000
+const port = process.env.PORT || 3000;
+
+// Listen on `port` and 0.0.0.0
+app.listen(port, "0.0.0.0", function () {
+  // ...
+  console.log(`💕 HeartConnect running at http://localhost:${PORT}`);
 });
+
+
