@@ -962,7 +962,10 @@ app.get('/auth/instagram/callback', passport.authenticate('instagram', { failure
 app.use('/api', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
 });
-
+// Health check for Railway
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
 // ──────────────────────────────────────────────────────────────
 // ⚠️ STATIC FILES – MUST COME AFTER ALL API ROUTES
 // ──────────────────────────────────────────────────────────────
@@ -974,10 +977,7 @@ app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ter
 app.get('/admin-policy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin-policy.html')));
 
 
-// Health check for Railway
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-});
+
 
 // ─── CATCH-ALL (SPA) – MUST BE LAST ──────────────────────────
 app.get(/.*/, (req, res) => {
