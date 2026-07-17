@@ -974,18 +974,15 @@ app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ter
 app.get('/admin-policy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin-policy.html')));
 
 
-// ─── CATCH-ALL (SPA) – MUST BE LAST ──────────────────────────
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// ... after all your routes, before the listen
-
 // Health check for Railway
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
 });
 
+// ─── CATCH-ALL (SPA) – MUST BE LAST ──────────────────────────
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 // Start server – bind to 0.0.0.0
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`💕 HeartConnect running at http://localhost:${PORT}`);
