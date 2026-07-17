@@ -1,40 +1,94 @@
 {
+  
   "name": "heartconnet",
+  
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  
+    
+  "start": "node server.js"
+  
   },
+  
   "keywords": [],
+  
   "license": "ISC",
+  
   "type": "commonjs",
+  
   "dependencies": {
-    "axios": "^1.18.1",
-    "bcrypt": "^6.0.0",
-    "cloudinary": "^1.41.3",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.5.2",
-    "jsonwebtoken": "^9.0.3",
-    "mongodb": "4.1",
-    "mongoose": "^9.7.4",
-    "multer": "^2.2.0",
-    "multer-storage-cloudinary": "^4.0.0",
-    "passport": "^0.7.0",
-    "passport-facebook": "^3.0.0",
-    "passport-instagram": "^1.0.0"
+  
+    
+  "axios": "^1.18.1",
+  
+    
+  "bcrypt": "^6.0.0",
+  
+    
+  "cloudinary": "^1.41.3",
+  
+    
+  "cors": "^2.8.6",
+  
+    
+  "dotenv": "^17.4.2",
+  
+    
+  "express": "^5.2.1",
+  
+    
+  "express-rate-limit": "^8.5.2",
+  
+    
+  "jsonwebtoken": "^9.0.3",
+  
+    
+  "mongodb": "4.1",
+  
+    
+  "mongoose": "^9.7.4",
+  
+    
+  "multer": "^2.2.0",
+  
+    
+  "multer-storage-cloudinary": "^4.0.0",
+  
+    
+  "passport": "^0.7.0",
+  
+    
+  "passport-facebook": "^3.0.0",
+  
+    
+  "passport-instagram": "^1.0.0"
+  
   },
+  
   "devDependencies": {
-    "nodemon": "^3.1.14"
+  
+    
+  "nodemon": "^3.1.14"
+  
   },
+  
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/godwin0037/heartconnect.git"
+  
+    
+  "type": "git",
+  
+    
+  "url": "git+https://github.com/godwin0037/heartconnect.git"
+  
   },
+  
   "bugs": {
-    "url": "https://github.com/godwin0037/heartconnect/issues"
+  
+    
+  "url": "https://github.com/godwin0037/heartconnect/issues"
+  
   },
+  
   "homepage": "https://github.com/godwin0037/heartconnect#readme"
 }
