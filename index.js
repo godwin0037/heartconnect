@@ -15,6 +15,8 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
+const port = process.env.PORT || 3000;
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
 // ── Debug ──
@@ -984,14 +986,9 @@ app.get('/', (req, res) => {
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-// Use PORT provided in environment or default to 3000
-const port = process.env.PORT || 3000;
-
 // Listen on `port` and 0.0.0.0
 app.listen(port, "0.0.0.0", function () {
   // ...
-  console.log(`💕 HeartConnect running at http://localhost:${PORT}`);
 });
 
 
