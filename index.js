@@ -973,18 +973,20 @@ app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'p
 app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
 app.get('/admin-policy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin-policy.html')));
 
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-});
 
 // ─── CATCH-ALL (SPA) – MUST BE LAST ──────────────────────────
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ─── START SERVER ──────────────────────────────────────────────
-app.listen(PORT,'0.0.0.0', () => {
+// ... after all your routes, before the listen
+
+// Health check for Railway
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+// Start server – bind to 0.0.0.0
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`💕 HeartConnect running at http://localhost:${PORT}`);
-    console.log(`📦 MongoDB: ${MONGODB_URI.replace(/:[^:@]*@/, ':****@')}`);
-    console.log(`☁️ Cloudinary: ${process.env.CLOUDINARY_CLOUD_NAME || 'not configured'}`);
 });
